@@ -52,6 +52,7 @@ case "${P}" in
 esac
 
 LIB="${P}libconnect-or-cut${EXT}"
+LIB_FOR_TEST="${P}libconnect-or-cut_test${EXT}"
 FLIB="${F}libconnect-or-cut${EXT}"
 
 _warn() {
@@ -272,6 +273,11 @@ while test $# -gt 0; do
 	    shift 2
 	    ;;
 
+	--test-mode)
+	    LIB=$LIB_FOR_TEST
+	    shift
+	    ;;
+
 	--log-target=*)
 	    _append_log_target "$1" "`_value $1`"
 	    shift
@@ -349,6 +355,7 @@ export COC_LOG_PATH
 _append_preload
 unset preload
 unset LIB
+unset LIB_FOR_TEST
 unset FLIB
 
 eval $OGLOB

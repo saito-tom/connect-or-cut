@@ -4,6 +4,10 @@ ABI := 1
 VER := $(ABI).0.4
 LIB := libconnect-or-cut.so
 TGT := $(LIB).$(VER)
+OBJ_FOR_TEST := $(SRC:.c=_test.o)
+LIB_FOR_TEST := libconnect-or-cut_test.so
+TGT_FOR_TEST := $(LIB_FOR_TEST).$(VER)
+LNK_FOR_TEST := $(LIB_FOR_TEST).$(ABI)
 TST := tcpcontest
 LNK := $(LIB).$(ABI)
 
@@ -39,16 +43,24 @@ CPPFLAGS+= ${OPTION_STEALTH_${stealth}} ${${os}_CPPFLAGS}
 LDFLAGS += ${${os}__LDFLAGS} ${${bits}__LDFLAGS}
 
 .PHONY: all
-all: $(TGT) $(TST)
+all: $(TGT) $(TGT_FOR_TEST) $(TST)
 
 .PHONY: clean
 clean:
-	rm -f $(OBJ) $(TGT) $(LNK) $(TST) $(TST).o
+	rm -f $(OBJ) $(TGT) $(LNK) $(OBJ_FOR_TEST) $(TGT_FOR_TEST) $(LNK_FOR_TEST) $(TST) $(TST).o
 
 $(TGT): $(OBJ)
 	$(CC) -o $(TGT) $(OBJ) $(LDFLAGS) ${${os}_LIBFLAGS}
 	rm -f $(LNK)
 	ln -s $(TGT) $(LNK)
+
+$(OBJ_FOR_TEST): $(SRC)
+	$(CC) -o $@ $(CPPFLAGS) $(CFLAGS) -D COC_TEST_MODE -c $<
+
+$(TGT_FOR_TEST): $(OBJ_FOR_TEST)
+	$(CC) -o $(TGT_FOR_TEST) $(OBJ_FOR_TEST) $(LDFLAGS) ${${os}_LIBFLAGS}
+	rm -f $(LNK_FOR_TEST)
+	ln -s $(TGT_FOR_TEST) $(LNK_FOR_TEST)
 
 $(TST): $(TST).o
 	$(CC) -o $(TST) $(TST).o $(LDFLAGS)
@@ -62,5 +74,5 @@ install: $(TGT)
 	(cd $(DESTLIB) && rm -f $(LNK) && ln -s $(TGT) $(LNK))
 
 .PHONY: test
-test: $(TGT) $(TST)
+test: $(TGT_FOR_TEST) $(TST)
 	./testsuite

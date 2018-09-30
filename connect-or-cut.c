@@ -234,6 +234,11 @@ static bool needs_dns_lookup = false;
 static coc_log_level_t log_level = COC_BLOCK_LOG_LEVEL;
 static coc_log_target_t log_target = COC_STDERR_LOG;
 static char *log_file_name = NULL;
+#ifdef COC_TEST_MODE
+static bool test_mode = true;
+#else
+static bool test_mode = false;
+#endif
 
 #ifdef __GNUC__
 static void
@@ -1363,6 +1368,11 @@ HOOK(connect(SOCKET fd, const struct sockaddr *addr, socklen_t addrlen))
 	      {
 		coc_log (COC_ALLOW_LOG_LEVEL, "ALLOW connection to %s:%hu\n", str,
 			 ntohs (port));
+		if (test_mode)
+		  {
+		    errno = EACCES;
+		    return -1;
+		  }
 		return real_connect (fd, addr, addrlen);
 	      }
 	    else
@@ -1381,5 +1391,10 @@ HOOK(connect(SOCKET fd, const struct sockaddr *addr, socklen_t addrlen))
 	       ntohs (port));
     }
 
+  if (test_mode)
+    {
+      errno = EACCES;
+      return -1;
+    }
   return real_connect (fd, addr, addrlen);
  }
